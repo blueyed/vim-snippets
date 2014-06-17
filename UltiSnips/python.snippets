@@ -36,8 +36,8 @@ DOXYGEN = 0x2
 SPHINX  = 0x3
 GOOGLE  = 0x4
 
-SINGLE_QUOTES = 0x1
-DOUBLE_QUOTES = 0x2
+SINGLE_QUOTES = "'"
+DOUBLE_QUOTES = '"'
 
 
 class Arg(object):
@@ -65,13 +65,11 @@ def get_args(arglist):
 def get_quoting_style(snip):
 	style = snip.opt("g:ultisnips_python_quoting_style", "double")
 	if style == 'single':
-		return SINGLE_QUOTES
-	return DOUBLE_QUOTES
+		return "'"
+	return '"'
 
 def triple_quotes(snip):
-	if get_quoting_style(snip) == SINGLE_QUOTES:
-		return "'''"
-	return '"""'
+	return get_quoting_style(snip) * 3
 
 def get_style(snip):
 	style = snip.opt("g:ultisnips_python_style", "normal")
