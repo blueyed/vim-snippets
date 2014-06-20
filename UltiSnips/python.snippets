@@ -36,8 +36,8 @@ DOXYGEN = 0x2
 SPHINX  = 0x3
 GOOGLE  = 0x4
 
-SINGLE_QUOTES = 0x1
-DOUBLE_QUOTES = 0x2
+SINGLE_QUOTES = "'"
+DOUBLE_QUOTES = '"'
 
 
 class Arg(object):
@@ -47,10 +47,10 @@ class Arg(object):
 
 	def __str__(self):
 		return self.name
-	
+
 	def __unicode__(self):
 		return self.name
-	
+
 	def is_kwarg(self):
 		return '=' in self.arg
 
@@ -65,13 +65,32 @@ def get_args(arglist):
 def get_quoting_style(snip):
 	style = snip.opt("g:ultisnips_python_quoting_style", "double")
 	if style == 'single':
-		return SINGLE_QUOTES
-	return DOUBLE_QUOTES
+		return "'"
+	return '"'
 
 def triple_quotes(snip):
-	if get_quoting_style(snip) == SINGLE_QUOTES:
-		return "'''"
-	return '"""'
+	return get_quoting_style(snip) * 3
+
+def triple_quotes_handle_trailing(snip, quoting_style):
+	if not hasattr(snip, '_tqt'):
+		_, col = vim.current.window.cursor
+		line = vim.current.line
+
+		# Handle already existing quote chars, usually from an autoclose plugin
+		# like delimitMate.
+		_ret = quoting_style * 3
+		while True:
+			try:
+				nextc = line[col]
+			except IndexError:
+				break
+			if nextc == '"' and len(_ret):
+				_ret = _ret[1:]
+				col = col+1
+			else:
+				break
+		snip._tqt = _ret
+	snip.rv = snip._tqt
 
 def get_style(snip):
 	style = snip.opt("g:ultisnips_python_style", "normal")
@@ -574,6 +593,24 @@ class Test${1:Class}(${2:unittest.TestCase}):
 
 	def test_${6:name}(self):
 		${7:pass}
+endsnippet
+
+snippet " "doc quotes (double)" b
+"""
+${1:doc}
+`!p triple_quotes_handle_trailing(snip, '"')`
+endsnippet
+
+snippet ' "doc quotes (single)" b
+'''
+${1:doc}
+`!p triple_quotes_handle_trailing(snip, "'")`
+endsnippet
+
+snippet doc
+`!p snip.rv = triple_quotes(snip)`
+${1:doc}
+`!p snip.rv = triple_quotes(snip)`
 endsnippet
 
 # vim:ft=snippets:
